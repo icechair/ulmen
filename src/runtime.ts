@@ -1,11 +1,12 @@
-export type Dispatch<T = any> = (message: T) => void
-export type Effect = ((signal: Dispatch) => void) | undefined
-export type StateEffect<TState> = [TState, Effect?]
+type Message<T extends any> = T
+export type Dispatch<T> = (message: Message<T>) => void
+export type Effect<T> = ((signal: Dispatch<T>) => void) | undefined
+export type StateEffect<TState, TMessage> = [TState, Effect<TMessage>?]
 
-export type Update<TState, TMessage = any> = (
+export type Update<TState, TMessage> = (
   message: TMessage,
   model: TState
-) => StateEffect<TState>
+) => StateEffect<TState, TMessage>
 
 export type View<TModel, TView = void> = (
   model: TModel,
@@ -13,26 +14,26 @@ export type View<TModel, TView = void> = (
 ) => TView
 
 export type Done<TState> = (state: TState) => void
-export interface Program<TState, TView = void> {
-  init: StateEffect<TState>
-  update: Update<TState>
+export interface Program<TState, TMessage, TView = void> {
+  init: StateEffect<TState, TMessage>
+  update: Update<TState, TMessage>
   view: View<TState, TView>
   done?: Done<TState>
 }
 
-export const runtime = <TState, TView = void>(
-  program: Program<TState, TView>
+export const runtime = <TState, TMessage, TView = void>(
+  program: Program<TState, TMessage, TView>
 ) => {
   let isRunning = true
   const { init, update, view, done } = program
   let state: TState
-  const dispatch = <T>(message: T) => {
+  const dispatch: Dispatch<TMessage> = message => {
     if (isRunning) {
       change(update(message, state))
     }
   }
 
-  const change = (next: StateEffect<TState>) => {
+  const change = (next: StateEffect<TState, TMessage>) => {
     state = next[0]
     const effect = next[1]
     if (effect) {

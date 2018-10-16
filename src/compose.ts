@@ -1,9 +1,9 @@
 import { Effect, Dispatch, Program, StateEffect, View, Update } from './runtime'
 
 export const mapEffect = <A, B>(
-  effect: Effect,
+  effect: Effect<A>,
   callback: (message: A) => B
-): Effect => {
+): Effect<B> => {
   if (typeof callback !== 'function') {
     throw new Error('callback must be a function')
   }
@@ -13,45 +13,48 @@ export const mapEffect = <A, B>(
   if (typeof effect !== 'function') {
     throw new Error('Effects must be functions or falsy')
   }
-  return (dispatch: Dispatch) => {
+  return (dispatch: Dispatch<B>) => {
     return effect(message => dispatch(callback(message)))
   }
 }
 
-export const batchEffects = (effects: Effect[]) => {
+export const batchEffects = <T>(effects: Array<Effect<T>>) => {
   for (const eff of effects) {
     if (eff && typeof eff !== 'function') {
       throw new Error('Effects must be functions or falsy')
     }
   }
 
-  return (dispatch: Dispatch) =>
+  return (dispatch: Dispatch<T>) =>
     effects.map(effect => (effect ? effect(dispatch) : effect))
 }
 
 export const mapProgram = <TState, A, B, TView = void>(
-  program: Program<TState, TView>,
+  program: Program<TState, A, TView>,
   callback: (message: A) => B
-) => {
+): Program<TState, B, TView> => {
   const start = program.init
   const { done } = program
-  const init = [start[0], mapEffect(start[1], callback)] as StateEffect<TState>
-  const update: Update<TState> = (msg, state: TState) => {
-    const change = program.update(msg, state)
+  const init = [start[0], mapEffect(start[1], callback)] as StateEffect<
+    TState,
+    B
+  >
+  const update = (msg: B, state: TState): StateEffect<TState, B> => {
+    const change = program.update((msg as unknown) as A, state)
     return [change[0], mapEffect(change[1], callback)]
   }
 
-  const view = (state: TState, dispatch: Dispatch) =>
+  const view = (state: TState, dispatch: Dispatch<B>) =>
     program.view(state, message => dispatch(callback(message)))
 
   return { init, update, view, done }
 }
 
-export const batchPrograms = <TState = any, TView = void>(
-  programs: Array<Program<TState>>,
+export const batchPrograms = <TState, TMessage, TView>(
+  programs: Array<Program<TState, TMessage, TView>>,
   containerView: (views: Array<View<TState>>) => TView
-): Program<TState[]> => {
-  const embeds = [] as Array<typeof programs[0]>
+): Program<TState[], { index: number; data: TMessage }, TView> => {
+  const embeds = [] as Array<Program<TState, any, TView>>
   const states = [] as TState[]
   const effects = []
   const programCount = programs.length
@@ -63,20 +66,25 @@ export const batchPrograms = <TState = any, TView = void>(
     states.push(embed.init[0])
     effects.push(embed.init[1])
   }
-  console.log(embeds)
-  console.log(states)
-  console.log(effects)
-  const init = [states, batchEffects(effects)] as StateEffect<TState[]>
-  console.log(init)
-  const update = <T>(msg: { index: number; data: T }, state: TState[]) => {
+  const init = [states, batchEffects(effects)] as StateEffect<
+    TState[],
+    { index: number; data: TMessage }
+  >
+  const update: Update<TState[], { index: number; data: TMessage }> = (
+    msg,
+    state: TState[]
+  ) => {
     const { index, data } = msg
     const change = embeds[index].update(data, state[index])
     const newState = state.slice(0)
     newState[index] = change[0]
-    return [newState, change[1]] as StateEffect<TState[]>
+    return [newState, change[1]] as StateEffect<
+      TState[],
+      { index: number; data: TMessage }
+    >
   }
 
-  const view = (state: TState[], dispatch: Dispatch) => {
+  const view = (state: TState[], dispatch: Dispatch<TMessage>) => {
     const programViews = embeds.map((embed, index) => () =>
       embed.view(state[index], dispatch)
     )
@@ -101,13 +109,17 @@ export interface AssembleProgram<
   TDataOpts,
   TLogicOpts,
   TViewOpts,
+  TMessage,
   TView = void
 > {
   data: (opts?: TDataOpts) => TData
   dataOptions?: TDataOpts
-  logic: (data: TData, opts?: TLogicOpts) => Program<TState>
+  logic: (
+    data: TData,
+    opts?: TLogicOpts
+  ) => { init: StateEffect<TState, TMessage>; update: Update<TState, TMessage> }
   logicOptions?: TLogicOpts
-  view: (model: TState, dispatch: Dispatch, opts?: TViewOpts) => TView
+  view: (model: TState, dispatch: Dispatch<TMessage>, opts?: TViewOpts) => TView
   viewOptions?: TViewOpts
 }
 
@@ -117,6 +129,7 @@ export const assembleProgram = <
   TDataOpts,
   TLogicOpts,
   TViewOpts,
+  TMessage,
   TView = void
 >({
   data,
@@ -131,11 +144,12 @@ export const assembleProgram = <
   TDataOpts,
   TLogicOpts,
   TViewOpts,
+  TMessage,
   TView
->): Program<TState, TView> => {
+>): Program<TState, TMessage, TView> => {
   return Object.assign(
     {
-      view: (model: TState, dispatch: Dispatch) => {
+      view: (model: TState, dispatch: Dispatch<TMessage>) => {
         return view(model, dispatch, viewOptions)
       }
     },

@@ -7,12 +7,13 @@ import {
   assembleProgram
 } from './compose'
 import { Dispatch, Effect, StateEffect, Program } from './runtime'
+import { stringify } from 'querystring'
 const id = <T>(x: T) => x
-const update = <T>(_msg: T, state: T): StateEffect<T> => [state]
+const update = <T>(_msg: T, state: T): StateEffect<T, T> => [state]
 
-const makeEffect = <T>(val: T) => (dispatch: Dispatch) => dispatch(val)
+const makeEffect = <T>(val: T) => (dispatch: Dispatch<T>) => dispatch(val)
 test('mapEffects', t => {
-  const rawEffect: Effect = dispatch => {
+  const rawEffect: Effect<number> = dispatch => {
     dispatch(1)
     dispatch(2)
     dispatch(3)
@@ -162,7 +163,7 @@ test('mapProgram() should return a done if the original program does', t => {
 })
 
 test('batchPrograms() program.done should call sub program done functions', t => {
-  const subProgramWithDone: Program<string> = {
+  const subProgramWithDone: Program<string, string> = {
     init: ['foo', undefined],
     update: (_msg, x) => [x],
     view: () => ({}),
@@ -172,7 +173,7 @@ test('batchPrograms() program.done should call sub program done functions', t =>
     }
   }
 
-  const subProgramWithoutDone: Program<string> = {
+  const subProgramWithoutDone: Program<string, string> = {
     init: ['bar'],
     update: (_msg, x) => [x],
     view: () => ({})
@@ -196,20 +197,25 @@ test('assembleProgram() should return an assembled program', t => {
   const viewOptions = {}
   const dataResult = {}
 
-  function data(options: typeof dataOptions) {
-    t.is(options, dataOptions)
+  function data(opts?: typeof dataOptions) {
+    t.is(opts, dataOptions, 'data options should be present')
     return dataResult
   }
 
-  function logic(d: typeof dataResult, options: typeof dataOptions) {
-    t.is(d, dataResult)
-    t.is(options, logicOptions)
+  function logic(d: typeof dataResult, options?: typeof logicOptions) {
+    t.is(d, dataResult, 'd should be dataResult')
+    t.is(options, logicOptions, 'options should be logicOptions')
 
-    return { foo: 'bar' }
+    const initial = 0
+    return { init: [initial] as StateEffect<number, number>, update }
   }
 
-  function view(model: any, dispatch: Dispatch, options: typeof viewOptions) {
-    t.is(options, viewOptions)
+  function view(
+    model: any,
+    dispatch: Dispatch<any>,
+    options?: typeof viewOptions
+  ) {
+    t.is(options, viewOptions, 'options should be viewOptions')
   }
 
   const program = assembleProgram({
@@ -221,6 +227,7 @@ test('assembleProgram() should return an assembled program', t => {
     logicOptions
   })
 
-  t.is(program.foo, 'bar')
-  program.view()
+  t.deepEqual(program.init, [0])
+  program.view(0, id)
+  // t.end()
 })

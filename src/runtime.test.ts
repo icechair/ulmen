@@ -1,5 +1,6 @@
 import test from 'tape'
-import { runtime, Dispatch } from './runtime'
+import { runtime, Dispatch, Effect } from './runtime'
+import { stringify } from 'querystring'
 test('runtime() should call view() initially', t => {
   const initialState = 1
   runtime({
@@ -17,14 +18,14 @@ test('runtime() should call view() after dispatch', t => {
   return new Promise(resolve => {
     runtime({
       init: ['init'],
-      update: (msg, _state) => [msg.type],
+      update: (msg: string, _state) => [msg],
       view: (state, dispatch) => {
         count++
         if (state === 'init') {
-          return dispatch({ type: 'next' })
+          return dispatch('next')
         }
         if (state === 'next') {
-          return dispatch({ type: 'done' })
+          return dispatch('done')
         }
         if (state === 'done') {
           return resolve()
@@ -58,7 +59,7 @@ test('runtime() should not call update/view if killed', t => {
   let initialRender = true
   const initialState = 'state'
   return new Promise(resolve => {
-    const afterKillEffect = (dispatch: Dispatch) => {
+    const afterKillEffect: Effect<string> = dispatch => {
       t.equal(typeof dispatch, 'function', 'dispatch is passed')
       setTimeout(() => {
         dispatch('')
