@@ -19,7 +19,6 @@
     "@types/tape": "^4.2.32",
     "nyc": "^13.0.1",
     "prettier": "^1.14.2",
-    "raj-snabbdom": "^0.1.1",
     "tap-spec": "^5.0.0",
     "tape": "^4.9.1",
     "ts-node": "^7.0.1",
