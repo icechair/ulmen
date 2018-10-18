@@ -75,6 +75,9 @@ export const batchPrograms = <TState, TMessage, TView>(
     state: TState[]
   ) => {
     const { index, data } = msg
+    if (!embeds[index]) {
+      return [state]
+    }
     const change = embeds[index].update(data, state[index])
     const newState = state.slice(0)
     newState[index] = change[0]
@@ -94,7 +97,6 @@ export const batchPrograms = <TState, TMessage, TView>(
   const done = (state: TState[]) => {
     for (let i = 0; i < programCount; i++) {
       const d = embeds[i].done
-      console.log('done', state[i], d)
       if (d) {
         d(state[i])
       }

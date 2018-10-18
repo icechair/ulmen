@@ -129,13 +129,21 @@ test('mapProgram() should return a done if the original program does', t => {
   const doneProgram = mapProgram(
     {
       init: ['foo'],
-      update,
-      view: id,
+      update: (msg, state) => {
+        if (msg === 'foo') {
+          return ['update-foo']
+        }
+        return [state]
+      },
+      view: state => {
+        t.pass('view called')
+        return `view: ${state}`
+      },
       done(s) {
         t.equal(s, 'foo')
-        return id
+        return s
       }
-    },
+    } as Program<string, string, string>,
     id
   )
 
@@ -150,10 +158,20 @@ test('mapProgram() should return a done if the original program does', t => {
 
   if (doneProgram.done) {
     t.is(typeof doneProgram.done, 'function')
+    t.is(
+      doneProgram.view(doneProgram.init[0], id),
+      'view: foo',
+      'view should return correctly'
+    )
+    let next = doneProgram.update('foo', doneProgram.init[0])
+    t.equal(next[0], 'update-foo', 'update shold still work')
+    t.equal(next[1], undefined, 'update shold still work')
+
+    next = doneProgram.update('blap', doneProgram.init[0])
     const state = doneProgram.init[0]
 
     const effect = doneProgram.done(state)
-    t.is(typeof effect, 'function')
+    t.is(effect, 'foo')
   } else {
     t.fail('doneProgram.done should not be undefined')
   }
@@ -219,7 +237,14 @@ test('batchPrograms() program.done should call sub program done functions', t =>
     )
 
     const [state] = program.init
-    program.update({ index: 3, data: '' }, state)
+    let next = program.update({ index: 3, data: '' }, state)
+    t.equal(next[0], state, 'unknown messages should not modify state')
+    next = program.update({ index: 0, data: 'foo-bar' }, state)
+    t.deepEqual(
+      next[0],
+      ['foo-bar', 'bar'],
+      'the correct program should be updated'
+    )
     program.view(state, id)
     if (program.done) {
       program.done(state)
