@@ -1,15 +1,15 @@
 language: node_js
 node_js:
-  - '8'
+- '8'
 install:
-  - npm install
+- npm install
 script:
-  - npm run coverage
-  - npm run build
+- npm run coverage
+- npm run build
 deploy:
   provider: npm
   email: martin.gabel@icechair.de
-  api_key:
-    secure: JBYYSnoPlbV7XmpVHwXu2NRFyZwin+X5fOhZg9XhYzIxr3n0FLIuKz+k1ycnkR/C+7bhsZK3gfWu0aC05J96QKsPtdAwtaL7rm7/w+sawBQi5Qo8XXR8/umsYs+tbx6PsbhptoAsYsIJLgPUkNFJ9tBpnQ+GFy4SZ89vBltxBtrBbByMVUMy5zYqN2lRE4sToEiDnhYsy0UV/jH77h2c91D/syQmVKA4ik4x+N2VzfNUztAQvcPTS3gVM7CtGchQdKsL78uoZkyo5EvIC2Tg/2iHfVaJLCE6phQqSdPQuF2tE2Dp09wB+T5io94L/81C3nKflL/UkSdVIhr0Rrdi405A8b6RttY5moI7LuFELrwJcauVJ19CffpL5dVNxpkXEIu07VNjLSKyx7KPpyeSxwa3DSgz5n8EzfSGTH5ELCmecAAXBrkak63lZRMS+txSW81eWd3a49FC4HwOckoi5ZmQ05vM3Kp0kA0MuasWP7NyxvMok80eK8o4BuXKe3AxydMTmmffJgXb/kYNCgP4PgnhqORWDHxNpjuQlqePoDOe8sxMN+rsbj41z3mqTa/wSAkkrxyJq7rPit6tGfvTmBooDgsnUzpvg8bL3k3s8CDgjWl4J3ZJXFSteC5+hY0hgrOwTE06AdEdAFMVPxQ6+52U57eQfcWRYyxeOe4VrEU=
   on:
     tags: true
+  api_key:
+    secure: SwxnDpQEu+nxUB8S6JU3ssd7mPUZjlGKlATu3CnqH6gDO+J3TL/52oXRGdn3QXW/R6diMgnLHfJKJ6bXbHdeIED8U262p0AIZIEhORSTPuFCnWMXvzCGPvqjrDvgCwLPtpBCVYKs0qXsE+Wd1WFFjy/elzCHzJoMu6sCHD0u5evKZeem/rwRUL7pr7Cm/2ZJJBybcTDLUs+RP8KyQpmKJzgPtmdDbjWBqmtW2sU3RnCgMe7hIqL/OYeptWaumSEef9MyiE/TRR2LZAAIb4tDN+reEOfl1wv5WSlLBRKaxx/jRcN7SD6f31L0wIaUz9xdqV93HQ/74gKVZOO1vdqdBzY3qnMROzT25z6nBew80D3Kba1xdrjWrw06OtyB7BhO/5agjZ5IHSd1ZiFI2OQlBc/NqyZMH5ebYu7UzaheJexYiOmxwUI9wp/zVzH1wQtR12I7A64Tnmz1LELvZNyTS0Gb6WovjCdE0NoUzdlUqtUzmrtoVWHoYx9NXro5AeN+4g+voQFSMmHof+dRb+gffRgNJpD924dez26Q4X7UpKZ0NXoqvTYIYB7qZ4PYahARk5GuTNUv8Z3l5eNYVf5tofMWSAOdg0EaKUBMP4sIP8rpXJwrtvsgEQy9dLcZCsGemM9CqIQHfAijuegmwpiLL8+zDhvY64D4u2ZnCaxjT+c=
