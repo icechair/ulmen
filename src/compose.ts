@@ -52,7 +52,7 @@ export const mapProgram = <TState, A, B, TView = void>(
 
 export const batchPrograms = <TState, TMessage, TView>(
   programs: Array<Program<TState, TMessage, TView>>,
-  containerView: (views: Array<View<TState>>) => TView
+  containerView: (views: Array<(() => TView)>) => TView
 ): Program<TState[], { index: number; data: TMessage }, TView> => {
   const embeds = [] as Array<Program<TState, any, TView>>
   const states = [] as TState[]
@@ -112,8 +112,8 @@ export interface AssembleProgram<
   TMessage,
   TView = void
 > {
-  data: (opts?: TDataOpts) => TData
-  dataOptions?: TDataOpts
+  data: (opts: TDataOpts) => TData
+  dataOptions: TDataOpts
   logic: (
     data: TData,
     opts?: TLogicOpts

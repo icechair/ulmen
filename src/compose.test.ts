@@ -163,10 +163,25 @@ test('mapProgram() should return a done if the original program does', t => {
 })
 
 test('batchPrograms() program.done should call sub program done functions', t => {
+  let viewWithDoneCalled = false
+  let viewWithoutDoneCalled = false
   const subProgramWithDone: Program<string, string> = {
     init: ['foo', undefined],
-    update: (_msg, x) => [x],
-    view: () => ({}),
+    update: (_msg, model) => {
+      if (_msg === 'foo-bar') {
+        return ['foo-bar']
+      }
+      return [model]
+    },
+    view: (model, dispatch) => {
+      if (!viewWithDoneCalled) {
+        t.equal(model, 'foo', 'the 2nd view should get the correct model')
+        viewWithDoneCalled = true
+        dispatch('foo-bar')
+        return
+      }
+      t.equal(model, 'foo-bar', 'the 2nd view should be updated')
+    },
     done: s => {
       t.equal(s, 'foo')
       t.end()
@@ -175,18 +190,43 @@ test('batchPrograms() program.done should call sub program done functions', t =>
 
   const subProgramWithoutDone: Program<string, string> = {
     init: ['bar'],
-    update: (_msg, x) => [x],
-    view: () => ({})
+    update: (_msg, model) => {
+      if (_msg === 'bar-foo') {
+        return ['bar-foo']
+      }
+      return [model]
+    },
+    view: (model, dispatch) => {
+      if (!viewWithoutDoneCalled) {
+        t.equal(model, 'bar', 'the 2nd view should get the correct model')
+        viewWithoutDoneCalled = true
+        dispatch('bar-foo')
+        return
+      }
+      t.equal(model, 'bar-foo', 'the 2nd view should be updated')
+    }
   }
 
-  const program = batchPrograms([subProgramWithDone, subProgramWithoutDone], id)
+  return new Promise(resolve => {
+    const program = batchPrograms(
+      [subProgramWithDone, subProgramWithoutDone],
+      views =>
+        Promise.all(
+          views.map(v => {
+            v()
+          })
+        ).then(() => resolve())
+    )
 
-  const [state] = program.init
-  if (program.done) {
-    program.done(state)
-  } else {
-    t.fail('batchProgram should have a done property')
-  }
+    const [state] = program.init
+    program.update({ index: 3, data: '' }, state)
+    program.view(state, id)
+    if (program.done) {
+      program.done(state)
+    } else {
+      t.fail('batchProgram should have a done property')
+    }
+  })
 })
 
 test('assembleProgram() should return an assembled program', t => {

@@ -1,6 +1,6 @@
 {
   "extension": [".ts"],
-  "exclude": ["**/*.d.ts", "dist/**/*", "src/index.ts", "**/*.test.ts"],
+  "exclude": ["**/*.d.ts", "lib/**/*", "src/index.ts", "**/*.test.ts"],
   "include": ["src/**/*.ts"],
   "require": ["ts-node/register", "source-map-support/register"],
   "all": true,
