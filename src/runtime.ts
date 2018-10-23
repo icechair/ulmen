@@ -7,16 +7,16 @@ export type Update<TState, TMessage> = (
   model: TState
 ) => StateEffect<TState, TMessage>
 
-export type View<TModel, TView = void> = (
+export type View<TModel, TMessage, TView = void> = (
   model: TModel,
-  dispatch: Dispatch<any>
+  dispatch: Dispatch<TMessage>
 ) => TView
 
 export type Done<TState> = (state: TState) => void
 export interface Program<TState, TMessage, TView = void> {
   init: StateEffect<TState, TMessage>
   update: Update<TState, TMessage>
-  view: View<TState, TView>
+  view: View<TState, TMessage, TView>
   done?: Done<TState>
 }
 

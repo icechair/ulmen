@@ -84,7 +84,10 @@ export const batchPrograms = <TState, TMessage, TView>(
     >
   }
 
-  const view = (state: TState[], dispatch: Dispatch<TMessage>) => {
+  const view = (
+    state: TState[],
+    dispatch: Dispatch<{ index: number; data: TMessage }>
+  ) => {
     const programViews = embeds.map((embed, index) => () =>
       embed.view(state[index], dispatch)
     )
