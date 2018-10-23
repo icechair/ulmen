@@ -272,7 +272,7 @@ test('assembleProgram() should return an assembled program', t => {
     t.is(options, logicOptions, 'options should be logicOptions')
 
     const initial = 0
-    return { init: [initial] as StateEffect<number, number>, update }
+    return { init: [initial] as StateEffect<number, any>, update }
   }
 
   function view(

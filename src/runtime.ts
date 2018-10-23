@@ -1,5 +1,5 @@
 export type Dispatch<T> = (message: T) => void
-export type Effect<T> = ((signal: Dispatch<T>) => void)
+export type Effect<T> = ((dispatch: Dispatch<T>) => void)
 export type StateEffect<TState, TMessage> = [TState, Effect<TMessage>?]
 
 export type Update<TState, TMessage> = (
