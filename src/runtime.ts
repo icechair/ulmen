@@ -1,6 +1,5 @@
-type Message<T extends any> = T
-export type Dispatch<T> = (message: Message<T>) => void
-export type Effect<T> = ((signal: Dispatch<T>) => void) | undefined
+export type Dispatch<T> = (message: T) => void
+export type Effect<T> = ((signal: Dispatch<T>) => void)
 export type StateEffect<TState, TMessage> = [TState, Effect<TMessage>?]
 
 export type Update<TState, TMessage> = (

@@ -1,9 +1,9 @@
 import { Effect, Dispatch, Program, StateEffect, View, Update } from './runtime'
 
 export const mapEffect = <A, B>(
-  effect: Effect<A>,
+  effect: Effect<A> | undefined,
   callback: (message: A) => B
-): Effect<B> => {
+): Effect<B> | undefined => {
   if (typeof callback !== 'function') {
     throw new Error('callback must be a function')
   }
@@ -18,7 +18,7 @@ export const mapEffect = <A, B>(
   }
 }
 
-export const batchEffects = <T>(effects: Array<Effect<T>>) => {
+export const batchEffects = <T>(effects: Array<Effect<T> | undefined>) => {
   for (const eff of effects) {
     if (eff && typeof eff !== 'function') {
       throw new Error('Effects must be functions or falsy')
@@ -33,15 +33,12 @@ export const mapProgram = <TState, A, B, TView = void>(
   program: Program<TState, A, TView>,
   callback: (message: A) => B
 ): Program<TState, B, TView> => {
-  const start = program.init
+  const [model, effect] = program.init
   const { done } = program
-  const init = [start[0], mapEffect(start[1], callback)] as StateEffect<
-    TState,
-    B
-  >
+  const init = [model, mapEffect(effect, callback)] as StateEffect<TState, B>
   const update = (msg: B, state: TState): StateEffect<TState, B> => {
-    const change = program.update((msg as unknown) as A, state)
-    return [change[0], mapEffect(change[1], callback)]
+    const [change, changeEffect] = program.update((msg as unknown) as A, state)
+    return [change, mapEffect(changeEffect, callback)]
   }
 
   const view = (state: TState, dispatch: Dispatch<B>) =>
