@@ -23,11 +23,11 @@ export interface Ulm<TState, TMessage, TView = void> {
   done?: Done<TState>
 }
 
-export function ulm<TModel, TMessage, TView = void>(
-  program: Ulm<TModel, TMessage, TView>
+export function ulmen<TModel, TMessage, TView = void>(
+  ulm: Ulm<TModel, TMessage, TView>
 ) {
   let running = true
-  const { init, update, view, done } = program
+  const { init, update, view, done } = ulm
   let state: TModel
   const signal: Signal<TMessage> = message => {
     if (running) {
@@ -52,8 +52,8 @@ export function ulm<TModel, TMessage, TView = void>(
     }
   }
 
-  change(init)
   return {
+    start: () => change(init),
     signal,
     stop
   }

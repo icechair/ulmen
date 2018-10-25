@@ -1,7 +1,5 @@
 > Elm architecture in JavaScript
 
-> [Raj][1] implementation in TypeScript
-
 ```
 npm install ulmen
 ```
@@ -9,12 +7,12 @@ npm install ulmen
 ## Example
 
 ```js
-import { runtime } from 'ulmen'
+import { ulmen } from 'ulmen'
 
-runtime({
-  init: [0], // State is an integer to count
+const runtime = ulmen({
+  init: { model: 0 }, // Model is an integer to count
   update(message, state) {
-    return [state + 1] // Increment the state
+    return { model: state + 1 } // Increment the model
   },
   view(state, dispatch) {
     const keepCounting = window.confirm(`Count is ${state}. Increment?`)
@@ -23,6 +21,5 @@ runtime({
     }
   }
 })
+runtime.start()
 ```
-
-[1]: https://github.com/andrejewski/raj

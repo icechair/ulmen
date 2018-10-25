@@ -1,4 +1,4 @@
-import { ulm } from './ulm'
+import { ulmen } from './ulm'
 import * as compose from './compose'
 
-export { ulm, compose }
+export { ulmen, compose }
