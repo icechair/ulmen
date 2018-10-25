@@ -1,4 +1,4 @@
-import * as runtime from './runtime'
+import { ulm } from './ulm'
 import * as compose from './compose'
 
-export {runtime, compose}
+export { ulm, compose }
