@@ -1,4 +1,4 @@
-import { Effect, Signal, Ulm, StateEffect, View, Update } from './runtime'
+import { Effect, Signal, Ulm, StateEffect, View, Update } from './ulm'
 
 export const mapEffect = <A, B>(
   effect: Effect<A> | undefined,

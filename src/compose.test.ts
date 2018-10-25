@@ -6,7 +6,7 @@ import {
   batchPrograms,
   assembleProgram
 } from './compose'
-import { Signal, Effect, StateEffect, Ulm } from './runtime'
+import { Signal, Effect, StateEffect, Ulm } from './ulm'
 import { stringify } from 'querystring'
 const id = <T>(x: T) => x
 const update = <T>(_msg: T, state: T): StateEffect<T, T> => [state]
