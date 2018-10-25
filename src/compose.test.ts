@@ -1,5 +1,5 @@
 import test from 'tape'
-import { mapEffect, batchEffects, mapProgram, batchPrograms } from './compose'
+import { mapEffect, batchEffects, mapUlm, batchUlmen } from './compose'
 import { Signal, Effect, StateEffect, Ulm } from './ulm'
 const id = <T>(x: T) => x
 test('`mapEffects`', t => {
@@ -105,8 +105,8 @@ test('`batchEffects` should throw if any effect is a truthy non-function', t => 
   t.end()
 })
 
-test('`mapProgram` should return a done if the original program does', t => {
-  const doneProgram = mapProgram(
+test('`mapUlm` should return a done if the original ulm does', t => {
+  const doneUlm = mapUlm(
     {
       init: { model: 'foo' },
       update: (msg, state) => {
@@ -127,7 +127,7 @@ test('`mapProgram` should return a done if the original program does', t => {
     id
   )
 
-  const notDoneProgram = mapProgram(
+  const notDoneUlm = mapUlm(
     {
       init: { model: 'bar' },
       update: (_, model) => ({ model }),
@@ -136,34 +136,34 @@ test('`mapProgram` should return a done if the original program does', t => {
     id
   )
 
-  if (doneProgram.done) {
-    t.is(typeof doneProgram.done, 'function')
+  if (doneUlm.done) {
+    t.is(typeof doneUlm.done, 'function')
     t.is(
-      doneProgram.view(doneProgram.init.model, id),
+      doneUlm.view(doneUlm.init.model, id),
       'view: foo',
       'view should return correctly'
     )
-    let next = doneProgram.update('foo', doneProgram.init.model)
+    let next = doneUlm.update('foo', doneUlm.init.model)
     t.equal(next.model, 'update-foo', 'update shold still work')
     t.equal(next.effect, undefined, 'update shold still work')
 
-    next = doneProgram.update('blap', doneProgram.init.model)
-    const state = doneProgram.init.model
+    next = doneUlm.update('blap', doneUlm.init.model)
+    const state = doneUlm.init.model
 
-    const effect = doneProgram.done(state)
+    const effect = doneUlm.done(state)
     t.is(effect, 'foo')
   } else {
-    t.fail('doneProgram.done should not be undefined')
+    t.fail('doneUlm.done should not be undefined')
   }
 
-  t.is(notDoneProgram.done, undefined)
+  t.is(notDoneUlm.done, undefined)
   t.end()
 })
 
-test('`batchPrograms().done` should call sub program done functions', t => {
+test('`batchUlmen().done` should call sub ulm done functions', t => {
   let viewWithDoneCalled = false
   let viewWithoutDoneCalled = false
-  const subProgramWithDone: Ulm<string, string> = {
+  const subUlmWithDone: Ulm<string, string> = {
     init: { model: 'foo' },
     update: (_msg, model) => {
       if (_msg === 'foo-bar') {
@@ -186,7 +186,7 @@ test('`batchPrograms().done` should call sub program done functions', t => {
     }
   }
 
-  const subProgramWithoutDone: Ulm<string, string> = {
+  const subUlmWithoutDone: Ulm<string, string> = {
     init: { model: 'bar' },
     update: (_msg, model) => {
       if (_msg === 'bar-foo') {
@@ -206,30 +206,28 @@ test('`batchPrograms().done` should call sub program done functions', t => {
   }
 
   return new Promise(resolve => {
-    const program = batchPrograms(
-      [subProgramWithDone, subProgramWithoutDone],
-      views =>
-        Promise.all(
-          views.map(v => {
-            v()
-          })
-        ).then(() => resolve())
+    const ulm = batchUlmen([subUlmWithDone, subUlmWithoutDone], views =>
+      Promise.all(
+        views.map(v => {
+          v()
+        })
+      ).then(() => resolve())
     )
 
-    const { model } = program.init
-    let next = program.update({ index: 3, data: '' }, model)
+    const { model } = ulm.init
+    let next = ulm.update({ index: 3, data: '' }, model)
     t.equal(next.model, model, 'unknown messages should not modify state')
-    next = program.update({ index: 0, data: 'foo-bar' }, model)
+    next = ulm.update({ index: 0, data: 'foo-bar' }, model)
     t.deepEqual(
       next.model,
       ['foo-bar', 'bar'],
-      'the correct program should be updated'
+      'the correct ulm should be updated'
     )
-    program.view(model, id)
-    if (program.done) {
-      program.done(model)
+    ulm.view(model, id)
+    if (ulm.done) {
+      ulm.done(model)
     } else {
-      t.fail('batchProgram should have a done property')
+      t.fail('batchUlm should have a done property')
     }
   })
 })

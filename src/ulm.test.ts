@@ -1,7 +1,7 @@
 import test from 'tape'
 import { ulmen, Signal, Effect } from './ulm'
 import { stringify } from 'querystring'
-test('`ulm` should call `view` initially', t => {
+test('`ulmen` should call `view` initially', t => {
   const model = 1
   ulmen({
     init: { model },
@@ -13,7 +13,7 @@ test('`ulm` should call `view` initially', t => {
   }).start()
 })
 
-test('`ulm` should call `view` after signal', async t => {
+test('`ulmen` should call `view` after signal', async t => {
   let count = 0
   await new Promise(resolve => {
     ulmen({
@@ -37,7 +37,7 @@ test('`ulm` should call `view` after signal', async t => {
   t.end()
 })
 
-test('`ulm().stop` should call `done` when killed', async t => {
+test('`ulmen().stop` should call `done` when killed', async t => {
   await new Promise(resolve => {
     const model = 'state'
     const runtime = ulmen({
@@ -55,7 +55,7 @@ test('`ulm().stop` should call `done` when killed', async t => {
   t.end()
 })
 
-test('`ulm().stop` should not call `update` and/or `view` if killed', async t => {
+test('`ulmen().stop` should not call `update` and/or `view` if killed', async t => {
   let initialRender = true
   const model = 'state'
   await new Promise(resolve => {
@@ -87,7 +87,7 @@ test('`ulm().stop` should not call `update` and/or `view` if killed', async t =>
   t.end()
 })
 
-test('`ulm().stop()` should call `done` only once', t => {
+test('`ulmen().stop()` should call `done` only once', t => {
   let initialCall = true
   const runtime = ulmen({
     init: { model: '' },
