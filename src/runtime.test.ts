@@ -1,9 +1,9 @@
 import test from 'tape'
-import { runtime, Dispatch, Effect } from './runtime'
+import { ulm, Signal, Effect } from './runtime'
 import { stringify } from 'querystring'
 test('runtime() should call view() initially', t => {
   const initialState = 1
-  runtime({
+  ulm({
     init: [initialState],
     update: (_msg, state) => [state],
     view: state => {
@@ -16,7 +16,7 @@ test('runtime() should call view() initially', t => {
 test('runtime() should call view() after dispatch', t => {
   let count = 0
   return new Promise(resolve => {
-    runtime({
+    ulm({
       init: ['init'],
       update: (msg: string, _state) => [msg],
       view: (state, dispatch) => {
@@ -42,7 +42,7 @@ test('runtime() should call done() when killed', t => {
   t.plan(1)
   return new Promise(resolve => {
     const initialState = 'state'
-    const kill = runtime({
+    const kill = ulm({
       init: [initialState],
       update: (_msg, state) => [state],
       view: () => undefined,
@@ -66,7 +66,7 @@ test('runtime() should not call update/view if killed', t => {
         resolve()
       }, 10)
     }
-    const kill = runtime({
+    const kill = ulm({
       init: [initialState, afterKillEffect],
       update: (_msg, state) => {
         t.fail('update() should not be called')
@@ -89,7 +89,7 @@ test('runtime() should not call update/view if killed', t => {
 test('runtime() should call done() once', t => {
   t.plan(1)
   let initialCall = true
-  const kill = runtime({
+  const kill = ulm({
     init: [''],
     update: (_msg, state) => [state],
     view: () => ({}),

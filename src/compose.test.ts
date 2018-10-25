@@ -6,12 +6,12 @@ import {
   batchPrograms,
   assembleProgram
 } from './compose'
-import { Dispatch, Effect, StateEffect, Program } from './runtime'
+import { Signal, Effect, StateEffect, Ulm } from './runtime'
 import { stringify } from 'querystring'
 const id = <T>(x: T) => x
 const update = <T>(_msg: T, state: T): StateEffect<T, T> => [state]
 
-const makeEffect = <T>(val: T) => (dispatch: Dispatch<T>) => dispatch(val)
+const makeEffect = <T>(val: T) => (dispatch: Signal<T>) => dispatch(val)
 test('mapEffects', t => {
   const rawEffect: Effect<number> = dispatch => {
     dispatch(1)
@@ -143,7 +143,7 @@ test('mapProgram() should return a done if the original program does', t => {
         t.equal(s, 'foo')
         return s
       }
-    } as Program<string, string, string>,
+    } as Ulm<string, string, string>,
     id
   )
 
@@ -183,7 +183,7 @@ test('mapProgram() should return a done if the original program does', t => {
 test('batchPrograms() program.done should call sub program done functions', t => {
   let viewWithDoneCalled = false
   let viewWithoutDoneCalled = false
-  const subProgramWithDone: Program<string, string> = {
+  const subProgramWithDone: Ulm<string, string> = {
     init: ['foo', undefined],
     update: (_msg, model) => {
       if (_msg === 'foo-bar') {
@@ -206,7 +206,7 @@ test('batchPrograms() program.done should call sub program done functions', t =>
     }
   }
 
-  const subProgramWithoutDone: Program<string, string> = {
+  const subProgramWithoutDone: Ulm<string, string> = {
     init: ['bar'],
     update: (_msg, model) => {
       if (_msg === 'bar-foo') {
@@ -277,7 +277,7 @@ test('assembleProgram() should return an assembled program', t => {
 
   function view(
     model: any,
-    dispatch: Dispatch<any>,
+    dispatch: Signal<any>,
     options?: typeof viewOptions
   ) {
     t.is(options, viewOptions, 'options should be viewOptions')
