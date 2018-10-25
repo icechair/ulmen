@@ -1,41 +1,25 @@
 import test from 'tape'
-import {
-  mapEffect,
-  batchEffects,
-  mapProgram,
-  batchPrograms,
-  assembleProgram
-} from './compose'
+import { mapEffect, batchEffects, mapProgram, batchPrograms } from './compose'
 import { Signal, Effect, StateEffect, Ulm } from './ulm'
-import { stringify } from 'querystring'
 const id = <T>(x: T) => x
-const update = <T>(_msg: T, state: T): StateEffect<T, T> => [state]
-
-const makeEffect = <T>(val: T) => (dispatch: Signal<T>) => dispatch(val)
-test('mapEffects', t => {
-  const rawEffect: Effect<number> = dispatch => {
-    dispatch(1)
-    dispatch(2)
-    dispatch(3)
+test('`mapEffects`', t => {
+  const rawEffect: Effect<number> = signal => {
+    signal(1)
+    signal(2)
+    signal(3)
   }
   const inc = (n: number) => n + 1
   const newEffect = mapEffect(rawEffect, inc)
   const results = [] as any[]
-  if (newEffect) {
-    newEffect(result => results.push(result))
-    t.deepEqual(results, [2, 3, 4])
-  } else {
-    t.fail('new effect should not be undefined')
+  if (!newEffect) {
+    return t.fail('`newEffect` is undefined')
   }
+  newEffect(result => results.push(result))
+  t.deepEqual(results, [2, 3, 4])
   t.end()
 })
 
-test('mapEffect() should not wrap a falsy effect', t => {
-  /*
-    The reasoning for this test is that commands can
-    be falsy and not run by the runtime.
-    map() should align with this behavior.
-  */
+test('`mapEffect` should not wrap a falsy effect', t => {
   t.doesNotThrow(() => {
     const inc = (n: number) => n + 1
     const newEffect = mapEffect(undefined, inc)
@@ -44,39 +28,41 @@ test('mapEffect() should not wrap a falsy effect', t => {
   })
 })
 
-test('mapEffect() should return the result of the effect', t => {
+test('`mapEffect` should return the result of the effect', t => {
   const rawEffect = () => 1
   const newEffect = mapEffect(rawEffect, id)
-  if (newEffect) {
-    t.equal(newEffect(id), 1, 'newEffect should return the effect value')
-  } else {
-    t.fail('newEffect should not be undefined')
+  if (!newEffect) {
+    return t.fail('`newEffect` is undefined')
   }
+  t.equal(newEffect(id), 1, 'newEffect should return the effect value')
   t.end()
 })
 
-test('mapEffect() should throw for a truthy non-function-effect', t => {
+test('`mapEffect` should throw for a truthy non-function-effect', t => {
   t.pass('typescript to the rescue?')
   const badEffect = 10
   // @ts-ignore
   t.throws(() => mapEffect(badEffect, id), /must be functions/)
   t.end()
 })
-test('mapEffect() should throw for a non-function callback', t => {
+
+test('`mapEffect` should throw for a non-function callback', t => {
   const badCallback = 10
   // @ts-ignore
   t.throws(() => mapEffect(id, badCallback), /must be a function/)
   t.end()
 })
 
-test('batchEffects() should return a single effect', t => {
+test('`batchEffects` should return a single effect', t => {
   t.is(typeof batchEffects([]), 'function')
   t.end()
 })
 
-test('batchEffects() should pass dispatch to each effect', t => {
+test('`batchEffects` should pass `signal` to each effect', t => {
   const values = [1, 2, 3]
-  const effects = batchEffects(values.map(makeEffect))
+  const effects = batchEffects(
+    values.map(v => (signal: Signal<number>) => signal(v))
+  )
 
   const results = [] as any[]
   effects(result => results.push(result))
@@ -85,37 +71,31 @@ test('batchEffects() should pass dispatch to each effect', t => {
   t.end()
 })
 
-test('batchEffects() should not call falsy values', t => {
-  /*
-    The reasoning for this test is that commands can
-    be falsy and not run by the runtime.
-    batch() should align with this behavior.
-  */
-
+test('`batchEffects` should not call falsy values', t => {
   t.doesNotThrow(() => {
     // @ts-ignore
-    const effects = batchEffects([null, false, undefined, 0])
-    if (effects) {
-      effects(id)
-    } else {
-      t.fail('effects should not be undefined')
+    const effects = batchEffects([null, false, undefined, 0, ''])
+    if (!effects) {
+      return t.fail('`effects` is undefined')
     }
+    effects(id)
   })
   t.end()
 })
 
-test('batchEffects() should return the effects return values', t => {
+test('`batchEffects` should return the effects return values', t => {
   const values = [1, 2, 3]
-  const effects = batchEffects(values.map(makeEffect))
-  if (effects) {
-    t.deepEqual(effects(id), values)
-  } else {
-    t.fail('effects should not be undefined')
+  const effects = batchEffects(
+    values.map(v => (signal: Signal<number>) => signal(v))
+  )
+  if (!effects) {
+    return t.fail('effects is undefined')
   }
+  t.deepEqual(effects(id), values)
   t.end()
 })
 
-test('batchEffects() should throw if any effect is a truthy non-function', t => {
+test('`batchEffects` should throw if any effect is a truthy non-function', t => {
   const badEffect = 10
   const goodEffect = () => ({})
   // @ts-ignore
@@ -125,15 +105,15 @@ test('batchEffects() should throw if any effect is a truthy non-function', t => 
   t.end()
 })
 
-test('mapProgram() should return a done if the original program does', t => {
+test('`mapProgram` should return a done if the original program does', t => {
   const doneProgram = mapProgram(
     {
-      init: ['foo'],
+      init: { model: 'foo' },
       update: (msg, state) => {
         if (msg === 'foo') {
-          return ['update-foo']
+          return { model: 'update-foo' }
         }
-        return [state]
+        return { model: state }
       },
       view: state => {
         t.pass('view called')
@@ -143,14 +123,14 @@ test('mapProgram() should return a done if the original program does', t => {
         t.equal(s, 'foo')
         return s
       }
-    } as Ulm<string, string, string>,
+    },
     id
   )
 
   const notDoneProgram = mapProgram(
     {
-      init: ['bar'],
-      update,
+      init: { model: 'bar' },
+      update: (_, model) => ({ model }),
       view: id
     },
     id
@@ -159,16 +139,16 @@ test('mapProgram() should return a done if the original program does', t => {
   if (doneProgram.done) {
     t.is(typeof doneProgram.done, 'function')
     t.is(
-      doneProgram.view(doneProgram.init[0], id),
+      doneProgram.view(doneProgram.init.model, id),
       'view: foo',
       'view should return correctly'
     )
-    let next = doneProgram.update('foo', doneProgram.init[0])
-    t.equal(next[0], 'update-foo', 'update shold still work')
-    t.equal(next[1], undefined, 'update shold still work')
+    let next = doneProgram.update('foo', doneProgram.init.model)
+    t.equal(next.model, 'update-foo', 'update shold still work')
+    t.equal(next.effect, undefined, 'update shold still work')
 
-    next = doneProgram.update('blap', doneProgram.init[0])
-    const state = doneProgram.init[0]
+    next = doneProgram.update('blap', doneProgram.init.model)
+    const state = doneProgram.init.model
 
     const effect = doneProgram.done(state)
     t.is(effect, 'foo')
@@ -180,22 +160,22 @@ test('mapProgram() should return a done if the original program does', t => {
   t.end()
 })
 
-test('batchPrograms() program.done should call sub program done functions', t => {
+test('`batchPrograms().done` should call sub program done functions', t => {
   let viewWithDoneCalled = false
   let viewWithoutDoneCalled = false
   const subProgramWithDone: Ulm<string, string> = {
-    init: ['foo', undefined],
+    init: { model: 'foo' },
     update: (_msg, model) => {
       if (_msg === 'foo-bar') {
-        return ['foo-bar']
+        return { model: 'foo-bar' }
       }
-      return [model]
+      return { model }
     },
-    view: (model, dispatch) => {
+    view: (model, signal) => {
       if (!viewWithDoneCalled) {
         t.equal(model, 'foo', 'the 2nd view should get the correct model')
         viewWithDoneCalled = true
-        dispatch('foo-bar')
+        signal('foo-bar')
         return
       }
       t.equal(model, 'foo-bar', 'the 2nd view should be updated')
@@ -207,18 +187,18 @@ test('batchPrograms() program.done should call sub program done functions', t =>
   }
 
   const subProgramWithoutDone: Ulm<string, string> = {
-    init: ['bar'],
+    init: { model: 'bar' },
     update: (_msg, model) => {
       if (_msg === 'bar-foo') {
-        return ['bar-foo']
+        return { model: 'bar-foo' }
       }
-      return [model]
+      return { model }
     },
-    view: (model, dispatch) => {
+    view: (model, signal) => {
       if (!viewWithoutDoneCalled) {
         t.equal(model, 'bar', 'the 2nd view should get the correct model')
         viewWithoutDoneCalled = true
-        dispatch('bar-foo')
+        signal('bar-foo')
         return
       }
       t.equal(model, 'bar-foo', 'the 2nd view should be updated')
@@ -236,63 +216,20 @@ test('batchPrograms() program.done should call sub program done functions', t =>
         ).then(() => resolve())
     )
 
-    const [state] = program.init
-    let next = program.update({ index: 3, data: '' }, state)
-    t.equal(next[0], state, 'unknown messages should not modify state')
-    next = program.update({ index: 0, data: 'foo-bar' }, state)
+    const { model } = program.init
+    let next = program.update({ index: 3, data: '' }, model)
+    t.equal(next.model, model, 'unknown messages should not modify state')
+    next = program.update({ index: 0, data: 'foo-bar' }, model)
     t.deepEqual(
-      next[0],
+      next.model,
       ['foo-bar', 'bar'],
       'the correct program should be updated'
     )
-    program.view(state, id)
+    program.view(model, id)
     if (program.done) {
-      program.done(state)
+      program.done(model)
     } else {
       t.fail('batchProgram should have a done property')
     }
   })
-})
-
-test('assembleProgram() should return an assembled program', t => {
-  t.plan(5)
-
-  const dataOptions = {}
-  const logicOptions = {}
-  const viewOptions = {}
-  const dataResult = {}
-
-  function data(opts?: typeof dataOptions) {
-    t.is(opts, dataOptions, 'data options should be present')
-    return dataResult
-  }
-
-  function logic(d: typeof dataResult, options?: typeof logicOptions) {
-    t.is(d, dataResult, 'd should be dataResult')
-    t.is(options, logicOptions, 'options should be logicOptions')
-
-    const initial = 0
-    return { init: [initial] as StateEffect<number, any>, update }
-  }
-
-  function view(
-    model: any,
-    dispatch: Signal<any>,
-    options?: typeof viewOptions
-  ) {
-    t.is(options, viewOptions, 'options should be viewOptions')
-  }
-
-  const program = assembleProgram({
-    data,
-    dataOptions,
-    view,
-    viewOptions,
-    logic,
-    logicOptions
-  })
-
-  t.deepEqual(program.init, [0])
-  program.view(0, id)
-  // t.end()
 })
