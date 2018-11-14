@@ -25,8 +25,8 @@ export const batchEffects = <T>(effects: Array<Effect<T> | undefined>) => {
     }
   }
 
-  return (dispatch: Signal<T>) =>
-    effects.map(effect => (effect ? effect(dispatch) : effect))
+  return (signal: Signal<T>) =>
+    effects.map(effect => (effect ? effect(signal) : effect))
 }
 
 export function mapUlm<TState, A, B, TView = void>(
@@ -41,8 +41,8 @@ export function mapUlm<TState, A, B, TView = void>(
     return { ...change, effect: mapEffect(change.effect, callback) }
   }
 
-  const view = (state: TState, dispatch: Signal<B>) =>
-    ulm.view(state, message => dispatch(callback(message)))
+  const view = (state: TState, signal: Signal<B>) =>
+    ulm.view(state, message => signal(callback(message)))
 
   return { init, update, view, done }
 }
