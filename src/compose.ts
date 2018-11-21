@@ -63,7 +63,7 @@ export function batchUlmen<TState, TMessage, TView>(
   const effects = children.map(embed => embed.init.effect)
 
   const init = { model: states, effect: batchEffects(effects) }
-  const update = (msg: BatchMessage<TMessage>, state: TState[]) => {
+  function update(msg: BatchMessage<TMessage>, state: TState[]) {
     const { index, data } = msg
     if (!children[index]) {
       return { model: state }
@@ -74,7 +74,7 @@ export function batchUlmen<TState, TMessage, TView>(
     return { model: newState, effect: change.effect }
   }
 
-  const view = (state: TState[], dispatch: Signal<BatchMessage<TMessage>>) => {
+  function view(state: TState[], dispatch: Signal<BatchMessage<TMessage>>) {
     const ulmViews = children.map((child, index) => () =>
       child.view(state[index], dispatch)
     )

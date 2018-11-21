@@ -29,13 +29,13 @@ export function ulmen<TModel, TMessage, TView = void>(
   let running = true
   const { init, update, view, done } = ulm
   let state: TModel
-  const signal: Signal<TMessage> = message => {
+  function signal(message: TMessage) {
     if (running) {
       change(update(message, state))
     }
   }
 
-  const change = (next: StateEffect<TModel, TMessage>) => {
+  function change(next: StateEffect<TModel, TMessage>) {
     const { model, effect } = next
     state = model
     if (effect) {
@@ -43,7 +43,7 @@ export function ulmen<TModel, TMessage, TView = void>(
     }
     view(state, signal)
   }
-  const stop = () => {
+  function stop() {
     if (running) {
       running = false
       if (done) {
