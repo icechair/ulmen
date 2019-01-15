@@ -1,23 +1,23 @@
 export type Signal<T> = (message: T) => void
 export type Effect<T> = ((dispatch: Signal<T>) => void)
-export interface StateEffect<TModel, TMessage> {
-  model: TModel
+export interface INext<TState, TMessage> {
+  state: TState
   effect?: Effect<TMessage>
 }
 
-export type Update<TModel, TMessage> = (
+export type Update<TState, TMessage> = (
   message: TMessage,
-  model: TModel
-) => StateEffect<TModel, TMessage>
+  state: TState
+) => INext<TState, TMessage>
 
-export type View<TModel, TMessage, TView = void> = (
-  model: TModel,
+export type View<TState, TMessage, TView = void> = (
+  state: TState,
   signal: Signal<TMessage>
 ) => TView
 
 export type Done<TState> = (state: TState) => void
 export interface Ulm<TState, TMessage, TView = void> {
-  init: StateEffect<TState, TMessage>
+  init: INext<TState, TMessage>
   update: Update<TState, TMessage>
   view: View<TState, TMessage, TView>
   done?: Done<TState>
@@ -28,26 +28,26 @@ export function ulmen<TModel, TMessage, TView = void>(
 ) {
   let running = true
   const { init, update, view, done } = ulm
-  let state: TModel
+  let currentState: TModel
   function signal(message: TMessage) {
     if (running) {
-      change(update(message, state))
+      change(update(message, currentState))
     }
   }
 
-  function change(next: StateEffect<TModel, TMessage>) {
-    const { model, effect } = next
-    state = model
+  function change(next: INext<TModel, TMessage>) {
+    const { state, effect } = next
+    currentState = state
     if (effect) {
       effect(signal)
     }
-    view(state, signal)
+    view(currentState, signal)
   }
   function stop() {
     if (running) {
       running = false
       if (done) {
-        done(state)
+        done(currentState)
       }
     }
   }

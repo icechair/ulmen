@@ -5,8 +5,8 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "test": "exit 0",
-    "coverage": "nyc npm test",
+    "test": "ts-node node_modules/tape/bin/tape **/*.test.ts | tap-spec",
+    "coverage": "nyc tape **/*.test.ts",
     "lint": "tslint -p . --fix",
     "format": "prettier --write",
     "build": "tsc"
